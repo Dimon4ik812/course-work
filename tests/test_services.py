@@ -2,7 +2,7 @@ import json
 
 import pytest
 
-from src.service_copy import (analyze_cashback, find_person_to_person_transactions, investment_bank,
+from src.services import (analyze_cashback, find_person_to_person_transactions, investment_bank,
                           search_transaction_by_mobile_phone, search_transactions_by_user_choice)
 
 

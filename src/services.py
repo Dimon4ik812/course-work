@@ -1,79 +1,108 @@
-# Ниже представлен пример кода, который реализует функции для получения данных и формирования JSON-ответа:
-
 import json
+import re
+from datetime import datetime
+from typing import Dict, List
+from src.logger import setup_logger
 
-def get_greeting(datetime_str):
-    hour = int(datetime_str[11:13])
-    if hour < 6:
-        return "Доброй ночи"
-    elif hour < 12:
-        return "Доброе утро"
-    elif hour < 18:
-        return "Добрый день"
-    else:
-        return "Добрый вечер"
+logger = setup_logger("services", "logs/services.log")
 
-def get_last_digits(card_number):
-    return card_number[-4:]
 
-def get_total_spent(transactions):
-    total_spent = sum(transaction["Сумма платежа"] for transaction in transactions)
-    return round(total_spent, 2)
+def analyze_cashback(transactions: List[Dict], year: int, month: int) -> str:
+    """Принимает список словарей транзакций и считает сумму кэшбека по категориям"""
+    try:
+        cashback_analysis: Dict = {}
+        for transaction in transactions:
+            transaction_date = datetime.strptime(transaction["Дата операции"], "%d.%m.%Y %H:%M:%S")
+            if transaction_date.year == year and transaction_date.month == month:
+                category = transaction["Категория"]
+                amount = transaction["Сумма операции"]
+                if amount < 0:
+                    cashback_value = transaction["Кэшбэк"]
+                    if cashback_value is not None and cashback_value >= 0:
+                        cashback = float(cashback_value)
+                    else:
+                        cashback = round(amount * -0.01, 5)
+                    if category in cashback_analysis:
+                        cashback_analysis[category] += cashback
+                    else:
+                        cashback_analysis[category] = cashback
+        logger.info("Посчитана сумма кэшбека по категориям")
+        return json.dumps(cashback_analysis, ensure_ascii=False, indent=4)
+    except Exception as e:
+        print(f"Возникла ошибка {e}")
+        logger.error(f"Возникла ошибка {e}")
+        return ""
 
-def get_cashback(total_spent):
-    cashback = total_spent // 100
-    return round(cashback, 2)
 
-def get_top_transactions(transactions):
-    sorted_transactions = sorted(transactions, key=lambda x: x["Сумма платежа"], reverse=True)
-    top_transactions = []
-    for transaction in sorted_transactions[:5]:
-        top_transactions.append({
-            "date": transaction["Дата операции"],
-            "amount": transaction["Сумма платежа"],
-            "category": transaction["Категория"],
-            "description": transaction["Описание"]
-        })
-    return top_transactions
+# принимает строку с датой гггг.мм
+def investment_bank(transactions: List[Dict], date: str, limit: int) -> float | Exception:
+    """Функция принимает транзакции, дату и лимит округления и считает сколько можно было отложить в инвесткопилку"""
+    try:
+        sum_investment_bank = float(0.0)
+        user_date = datetime.strptime(date, "%Y.%m")
+        for transaction in transactions:
+            transaction_date = datetime.strptime(transaction["Дата операции"], "%d.%m.%Y %H:%M:%S")
+            if transaction_date.year == user_date.year and transaction_date.month == user_date.month:
+                amount = transaction["Сумма операции"]
+                if amount < 0 and transaction["Категория"] != "Переводы" and transaction["Категория"] != "Наличные":
+                    amount_ = abs(amount)  # перевел в положительное
+                    total_amount = ((amount_ + limit + 1) // limit) * limit - amount_
+                    sum_investment_bank += total_amount
+        logger.info(f"Инвесткопилка за  {date} посчитана")
+        return sum_investment_bank
+    except Exception as e:
+        print(f"Возникла ошибка {e}")
+        logger.error(f"Возникла ошибка {e}")
+        return e
 
-def generate_json_response(datetime_str, transactions):
-    greeting = get_greeting(datetime_str)
-    cards = []
-    for transaction in transactions:
-        card = {
-            "last_digits": get_last_digits(transaction["Номер карты"]),
-            "total_spent": get_total_spent(transactions),
-            "cashback": get_cashback(get_total_spent(transactions))
-        }
-        cards.append(card)
-    top_transactions = get_top_transactions(transactions)
-    currency_rates = [
-        {"currency": "USD", "rate": 73.21},
-        {"currency": "EUR", "rate": 87.08}
-    ]
-    stock_prices = [
-        {"stock": "AAPL", "price": 150.12},
-        {"stock": "AMZN", "price": 3173.18},
-        {"stock": "GOOGL", "price": 2742.39},
-        {"stock": "MSFT", "price": 296.71},
-        {"stock": "TSLA", "price": 1007.08}
-    ]
-    response = {
-        "greeting": greeting,
-        "cards": cards,
-        "top_transactions": top_transactions,
-        "currency_rates": currency_rates,
-        "stock_prices": stock_prices
-    }
-    return json.dumps(response, ensure_ascii=False, indent=2)
-# Вы можете использовать эту функцию следующим образом:
 
-datetime_str = "2022-01-17 12:34:56"
-transactions = [
-    # список словарей с данными о транзакциях
-    # ...
-]
+def search_transactions_by_user_choice(transactions: List[Dict], search: str) -> str:
+    """Функция выполняет поиск в транзакциях по переданной строке"""
+    try:
+        search_result = []
+        for transaction in transactions:
+            category = str(transaction.get("Категория", ""))
+            description = str(transaction.get("Описание", ""))
+            if search.lower() in description.lower() or search.lower() in category.lower():
+                search_result.append(transaction)
+        logger.info(f"Выполнен поиск по запросу {search}")
+        return json.dumps(search_result, ensure_ascii=False, indent=4)
+    except Exception as e:
+        print(f"Возникла ошибка {e}")
+        logger.error(f"Возникла ошибка {e}")
+        return ""
 
-json_response = generate_json_response(datetime_str, transactions)
-print(json_response)
-# Пожалуйста, обратите внимание, что Вам нужно будет заменить данные о транзакциях на реальные данные из Вашего списка словарей.
+
+def search_transaction_by_mobile_phone(transactions: List[Dict]) -> str:
+    """Функция возвращает транзакции в описании которых есть мобильный номер"""
+    try:
+        mobile_pattern = re.compile(r"\+\d{1,4}")
+        found_transactions = []
+        for transaction in transactions:
+            description = transaction.get("Описание", "")
+            if mobile_pattern.search(description):
+                found_transactions.append(transaction)
+        logger.info("Выполнен поиск по транзакциям с номером телефона")
+        return json.dumps(found_transactions, ensure_ascii=False, indent=4)
+    except Exception as e:
+        print(f"Возникла ошибка {e}")
+        logger.error(f"Возникла ошибка {e}")
+        return ""
+
+
+def find_person_to_person_transactions(transactions: List[Dict]) -> str:
+    """Функция вовзращает транзакции в описании которых есть имя кому или от кого выполнен перевод"""
+    try:
+        transfer_transactions = []
+        search_pattern = re.compile(r"\b[А-ЯЁ][а-яё]*\s[А-ЯЁ]\.")
+        for transaction in transactions:
+            category = transaction.get("Категория", "")
+            description = transaction.get("Описание", "")
+            if category == "Переводы" and search_pattern.search(description):
+                transfer_transactions.append(transaction)
+        logger.info("Выполнен поиск по переводам физлицам")
+        return json.dumps(transfer_transactions, ensure_ascii=False, indent=4)
+    except Exception as e:
+        print(f"Возникла ошибка {e}")
+        logger.error(f"Возникла ошибка {e}")
+        return ""

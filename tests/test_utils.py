@@ -1,45 +1,3 @@
-import unittest
-from tempfile import NamedTemporaryFile
-from src.utils import read_excel_to_dict_lict
-import pandas as pd
-
-
-
-class TestReadExcelToDictList(unittest.TestCase):
-
-    def setUp(self):
-        # Создаем временный Excel файл для тестирования
-        self.test_data = {
-            'Name': ['Alice', 'Bob', 'Charlie'],
-            'Age': [25, 30, 35],
-            'City': ['New York', 'Los Angeles', 'Chicago']
-        }
-        self.temp_file = NamedTemporaryFile(suffix='.xlsx', delete=False)
-        self.test_file_path = self.temp_file.name
-        self.df = pd.DataFrame(self.test_data)
-        self.df.to_excel(self.test_file_path, index=False)
-
-    def tearDown(self):
-        # Удаляем временный файл после завершения тестов
-        import os
-        os.remove(self.test_file_path)
-
-    def test_read_excel_to_dict_list(self):
-        data = read_excel_to_dict_lict(self.test_file_path)
-        expected_data = [
-            {'Name': 'Alice', 'Age': 25, 'City': 'New York'},
-            {'Name': 'Bob', 'Age': 30, 'City': 'Los Angeles'},
-            {'Name': 'Charlie', 'Age': 35, 'City': 'Chicago'}
-        ]
-        self.assertEqual(data, expected_data)
-
-    def test_read_excel_to_dict_list_invalid_file(self):
-        data = read_excel_to_dict_lict('nonexistent_file.xlsx')
-        self.assertIsNone(data)
-
-if __name__ == '__main__':
-    unittest.main()
-
 from datetime import datetime
 from unittest.mock import patch
 
@@ -47,7 +5,7 @@ import pandas as pd
 import pytest
 import requests_mock
 
-from src.utils import (filter_transactions_by_date, get_cards_data, get_data_from_xlsx, get_exchange_rates,
+from src.utils import (filter_transactions_by_date, get_cards_data, read_excel_to_dict_lict, get_exchange_rates,
                        get_stocks_cost, get_top_5_transactions, greeting)
 
 
@@ -68,7 +26,7 @@ def test_get_data_from_xlsx():
     ]
     df = pd.DataFrame(test_data)
     with patch("pandas.read_excel", return_value=df):
-        result = get_data_from_xlsx(r"../data/operations.xls")
+        result = read_excel_to_dict_lict(r"../data/operations.xls")
         assert result == test_data
 
 

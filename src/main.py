@@ -1,49 +1,40 @@
-from src.utils1 import read_excel_to_dict_lict, filter_transactions_by_date, get_last_digits, get_total_spent, top_5_transactions
 import pandas as pd
 
+import src.config
+from src.reports import spending_by_category, spending_by_weekday, spending_by_workday
+from src.services import (
+    analyze_cashback,
+    find_person_to_person_transactions,
+    investment_bank,
+    search_transaction_by_mobile_phone,
+    search_transactions_by_user_choice,
+)
+from src.views import main, user_choice
+
+# web сервисов
+main_page = main(src.config.input_date_str, user_choice, src.config.api_key_currency, src.config.api_key_stocks)
+print(main_page)
+
+# сервисы
+cashback_analysis_result = analyze_cashback(src.config.transactions, src.config.year, src.config.month)
+investment_bank_result = investment_bank(src.config.transactions, src.config.date, src.config.limit)
+search_transactions_by_user_choice_result = search_transactions_by_user_choice(
+    src.config.transactions, src.config.search
+)
+search_transaction_by_mobile_phone_result = search_transaction_by_mobile_phone(src.config.transactions)
+find_person_to_person_transactions_result = find_person_to_person_transactions(src.config.transactions)
+print(cashback_analysis_result)
+print(investment_bank_result)
+print(search_transactions_by_user_choice_result)
+print(search_transaction_by_mobile_phone_result)
+print(find_person_to_person_transactions_result)
 
 
-def get_card_number(transactions):
-    card_number = []
-    new_card = []
-    for transaction in transactions:
-        if pd.notnull(transaction['Номер карты']):
-            card_number.append(transaction['Номер карты'])
-    for card in card_number:
-        if card not in new_card:
-            new_card.append(card)
-    return new_card
-
-
-def get_card_info(transactions, card_number):
-    """
-    Возвращает информацию о карте.
-    """
-    list_dict = []
-    for card in card_number:
-        for transaction in transactions:
-            if card == transaction['Номер карты']:
-                last_digit = get_last_digits(card)
-                total_spent = get_total_spent(transactions, card)
-                cashback = total_spent // 100
-
-                result = {
-                        "last_digit": str(last_digit),
-                        "total_spent ": total_spent,
-                        "cashback": cashback
-                }
-        list_dict.append(result)
-    print(list_dict)
-    return list_dict
-
-if __name__ == '__main__':
-    file_path = '../data/operations.xls'
-    transactions = filter_transactions_by_date(read_excel_to_dict_lict(file_path), '30.12.2021')
-    card = get_card_number(transactions)
-    card_info = get_card_info(transactions, card)
-    top_5 = top_5_transactions(transactions)
-    for num in top_5:
-
-        print(num)
-
-
+# отчёты
+df = pd.read_excel(r"../data/operations.xls")
+spending_by_category_result = spending_by_category(df, "Супермаркеты", "2020.05.20")
+spending_by_weekday_result = spending_by_weekday(df, "2020.05.20")
+spending_by_workday_result = spending_by_workday(df, "2020.05.20")
+print(spending_by_category_result)
+print(spending_by_weekday_result)
+print(spending_by_workday_result)
