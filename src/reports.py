@@ -5,7 +5,7 @@ from src.logger import setup_logger
 
 import pandas as pd
 
-logger = setup_logger("reports", "../logs/reports.log")
+logger = setup_logger("reports", "logs/reports.log")
 
 
 def report_to_file_default(func):
