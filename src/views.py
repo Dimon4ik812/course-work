@@ -1,6 +1,7 @@
 import json
 import os
 from dotenv import load_dotenv
+from typing import Any
 
 from src.utils import (
     filter_transactions_by_date,
@@ -20,7 +21,7 @@ api_key_stocks = os.getenv("API_KEY_STOCKS")
 input_date_str = "20.03.2020"
 
 
-def main(input_date, user_settings, api_key_currency, api_key_stocks):
+def main(input_date: Any, user_settings: Any, api_key_currency: Any, api_key_stocks: Any) -> Any:
     """Основная функция для генерации JSON-ответа."""
     path = r"../data/operations.xls"
     transactions = read_excel_to_dict_lict(path)

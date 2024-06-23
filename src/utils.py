@@ -3,6 +3,7 @@ from typing import Dict, List
 from src.logger import setup_logger
 import pandas as pd
 import requests
+from typing import Any
 
 logger = setup_logger("utils", "logs/utils.log")
 
@@ -26,7 +27,7 @@ def filter_transactions_by_date(transactions: List[Dict], input_date_str: str) -
     end_date = input_date + timedelta(days=1)
     start_date = datetime(end_date.year, end_date.month, 1)
 
-    def parse_date(date_str: str):
+    def parse_date(date_str: str) -> datetime:
         """Функция переводит дату из формата строки в формат datetime"""
         return datetime.strptime(date_str, "%d.%m.%Y %H:%M:%S")
 
@@ -39,7 +40,7 @@ def filter_transactions_by_date(transactions: List[Dict], input_date_str: str) -
     return filtered_transactions
 
 
-def greeting():
+def greeting() -> str:
     """Функция определяет время суток и возвращает приветствие в зависимости от времени"""
     now = datetime.now()
     current_hour = now.hour
@@ -115,7 +116,7 @@ def get_top_5_transactions(transactions: List[Dict]) -> List[Dict]:
 
 
 # не забыть что функция принимает список ["USD", "EUR"]
-def get_exchange_rates(currencies: List[str], api_key_currency) -> List[Dict]:
+def get_exchange_rates(currencies: List[str], api_key_currency: Any) -> List[Dict]:
     """Функция принимает список кодов валют и возвращает список словарей с валютами и их курсами"""
     exchange_rates = []
     for currency in currencies:
@@ -136,7 +137,7 @@ def get_exchange_rates(currencies: List[str], api_key_currency) -> List[Dict]:
 
 
 # не забыть что функция принимает список ["AAPL", "AMZN", "GOOGL"]
-def get_stocks_cost(companies: List[str], api_key_stocks) -> List[Dict]:
+def get_stocks_cost(companies: List[str], api_key_stocks: Any) -> List[Dict]:
     """Функция принимает список кодов компаний и возвращает словарь со стоимостью акций каждой переданной компании"""
     stocks_cost = []
     for company in companies:
