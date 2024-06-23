@@ -1,6 +1,5 @@
 import functools
 import json
-import logging
 from datetime import datetime, timedelta
 from src.logger import setup_logger
 
