@@ -4,7 +4,7 @@ from datetime import datetime
 from typing import Dict, List
 from src.logger import setup_logger
 
-logger = setup_logger("services", "logs/services.log")
+logger = setup_logger("services", "../logs/services.log")
 
 
 def analyze_cashback(transactions: List[Dict], year: int, month: int) -> str:
